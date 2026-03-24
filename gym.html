@@ -49,7 +49,7 @@ html.light {
 body{
   background:var(--bg);color:var(--text);font-family:var(--mono);
   height:100dvh;display:flex;flex-direction:column;overflow:hidden;
-  font-size:13px;transition:background .3s,color .3s;
+  font-size:14px;transition:background .3s,color .3s;
 }
 
 /* ── VIEWS ────────────────────────────────────────────── */
@@ -258,8 +258,16 @@ body{
 .chart-lbl{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.12em;margin-bottom:10px}
 .no-data-msg{text-align:center;padding:20px 0;color:var(--muted);font-size:10px;letter-spacing:.06em}
 .h-tbl{margin:0 16px 16px;background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);overflow:hidden}
-.h-row{display:flex;align-items:center;padding:9px 13px;border-bottom:1px solid var(--bd);gap:10px}
-.h-row:last-child{border-bottom:none}
+.h-item{border-bottom:1px solid var(--bd)}
+.h-item:last-child{border-bottom:none}
+.h-row{display:flex;align-items:center;padding:9px 13px;gap:10px;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.h-chev{margin-left:auto;font-size:11px;color:var(--muted);transition:transform .2s;flex-shrink:0;line-height:1}
+.h-item.open .h-chev{transform:rotate(180deg)}
+.h-acc{max-height:0;overflow:hidden;transition:max-height .3s ease}
+.h-item.open .h-acc{max-height:600px}
+.h-acc-row{display:grid;grid-template-columns:18px 1fr 1fr;padding:6px 13px 6px 26px;gap:8px;font-size:9px;border-top:1px solid var(--bd);align-items:center;color:var(--muted)}
+.h-acc-n{font-weight:600}
+.h-acc-row.top-set{color:var(--text)}
 .h-date{font-size:9px;color:var(--muted);min-width:50px;flex-shrink:0}
 .h-detail{flex:1;font-size:10px;letter-spacing:.02em}
 .h-pr{font-size:8px;color:var(--gold);font-weight:600;background:rgba(251,191,36,.1);border-radius:3px;padding:2px 6px;letter-spacing:.06em}
@@ -378,8 +386,8 @@ body{
   display:flex;flex-direction:column;align-items:center;gap:3px;
   cursor:pointer;padding:4px 20px;transition:all .15s;min-width:60px;
 }
-.nav-ico{font-size:19px;line-height:1;display:flex;align-items:center;justify-content:center}
-.nav-lbl{font-size:8px;color:var(--muted);font-weight:500;letter-spacing:.1em;text-transform:uppercase}
+.nav-ico{font-size:22px;line-height:1;display:flex;align-items:center;justify-content:center}
+.nav-lbl{font-size:10px;color:var(--muted);font-weight:500;letter-spacing:.1em;text-transform:uppercase}
 .nav-item.active .nav-lbl{color:var(--red)}
 .nav-item.active .nav-ico{transform:translateY(-1px)}
 
@@ -509,13 +517,13 @@ img.emoji{height:1.1em;width:1.1em;vertical-align:-.1em;display:inline-block}
 <!-- ══ NAV ════════════════════════════════════════════════ -->
 <nav class="bottom-nav">
   <div class="nav-item active" onclick="showView('workout')">
-    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg></span><span class="nav-lbl">Workout</span>
+    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z"/></svg></span><span class="nav-lbl">Workout</span>
   </div>
   <div class="nav-item" onclick="showView('progress')">
-    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg></span><span class="nav-lbl">Progressi</span>
+    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M7.5 14.25v2.25m3-4.5v4.5m3-6.75v6.75m3-9v9M6 20.25h12A2.25 2.25 0 0020.25 18V6A2.25 2.25 0 0018 3.75H6A2.25 2.25 0 003.75 6v12A2.25 2.25 0 006 20.25z"/></svg></span><span class="nav-lbl">Progressi</span>
   </div>
   <div class="nav-item" onclick="showView('exercises')">
-    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg></span><span class="nav-lbl">Scheda</span>
+    <span class="nav-ico"><svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 6h9.75M10.5 6a1.5 1.5 0 11-3 0m3 0a1.5 1.5 0 10-3 0M3.75 6H7.5m3 12h9.75m-9.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-3.75 0H7.5m9-6h3.75m-3.75 0a1.5 1.5 0 01-3 0m3 0a1.5 1.5 0 00-3 0m-9.75 0h9.75"/></svg></span><span class="nav-lbl">Scheda</span>
   </div>
 </nav>
 
@@ -798,10 +806,10 @@ function finishWorkout(){
 //  TIMER
 // ═══════════════════════════════════════════════════════
 const CIRC=2*Math.PI*66;
-let tId=null,tDur=90,tLeft=90,tIv=null,tOn=false;
+let tId=null,tDur=90,tLeft=90,tIv=null,tOn=false,tEndTime=null,tExName='';
 function openTimer(id){
   tId=id;const ex=data.exercises.find(e=>e.id===id);
-  tDur=ex?.rest||90;tLeft=tDur;tOn=false;
+  tDur=ex?.rest||90;tLeft=tDur;tOn=false;tEndTime=null;tExName=ex?.name||'';
   if(tIv){clearInterval(tIv);tIv=null;}
   document.getElementById('t-exname').textContent=ex?`Pausa — ${ex.name}`:'Pausa';
   document.getElementById('t-ss').textContent='▶ Start';
@@ -810,24 +818,32 @@ function openTimer(id){
   document.getElementById('timer-overlay').classList.add('open');
   document.querySelectorAll('.timer-btn').forEach(b=>b.classList.remove('ticking'));
   document.getElementById('tb-'+id)?.classList.add('ticking');
+  if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
   startTimer();
 }
 function closeTimer(){
   document.getElementById('timer-overlay').classList.remove('open');
   if(tIv){clearInterval(tIv);tIv=null;tOn=false;}
+  tEndTime=null;
   document.querySelectorAll('.timer-btn').forEach(b=>b.classList.remove('ticking'));
 }
 function toggleTimer(){tOn?pauseTimer():startTimer();}
 function startTimer(){
   if(tLeft<=0)tLeft=tDur;tOn=true;
-  document.getElementById('t-ss').textContent='⏸ Pausa';
+  tEndTime=Date.now()+tLeft*1000;
+  document.getElementById('t-ss').textContent='\u23F8\uFE0E Pausa';
+  if(tIv){clearInterval(tIv);tIv=null;}
   tIv=setInterval(()=>{
-    tLeft--;updateTimerUI();
-    if(tLeft<=0){clearInterval(tIv);tIv=null;tOn=false;document.getElementById('t-ss').textContent='▶ Riparti';document.getElementById('t-time').classList.add('done');beep();}
-  },1000);
+    tLeft=Math.max(0,Math.ceil((tEndTime-Date.now())/1000));
+    updateTimerUI();
+    if(tLeft<=0){clearInterval(tIv);tIv=null;tOn=false;tEndTime=null;
+      document.getElementById('t-ss').textContent='▶ Riparti';
+      document.getElementById('t-time').classList.add('done');
+      beep();notifyDone();}
+  },500);
 }
-function pauseTimer(){tOn=false;if(tIv){clearInterval(tIv);tIv=null;}document.getElementById('t-ss').textContent='▶ Start';}
-function resetTimer(){pauseTimer();tLeft=tDur;document.getElementById('t-time').classList.remove('done');updateTimerUI();}
+function pauseTimer(){tOn=false;tEndTime=null;if(tIv){clearInterval(tIv);tIv=null;}document.getElementById('t-ss').textContent='▶ Start';}
+function resetTimer(){pauseTimer();tLeft=tDur;tEndTime=null;document.getElementById('t-time').classList.remove('done');updateTimerUI();}
 function adjTimer(d){
   tDur=Math.max(15,tDur+d);tLeft=tDur;pauseTimer();
   document.getElementById('t-time').classList.remove('done');
@@ -839,6 +855,14 @@ function updateTimerUI(){
   document.getElementById('t-dur-lbl').textContent=tDur+'s';
   document.getElementById('t-time').textContent=fmtTime(tLeft);
   document.getElementById('t-prog').style.strokeDashoffset=CIRC*(1-tLeft/tDur);
+}
+function notifyDone(){
+  if('Notification'in window&&Notification.permission==='granted'){
+    try{new Notification('GymLog \u2756 Pausa finita!',{
+      body:tExName?'Prossimo set: '+tExName:'Torna al tuo allenamento!',
+      icon:'./gym-icon.svg',tag:'gymlog-timer',silent:false
+    });}catch(e){}
+  }
 }
 function beep(){
   try{const ctx=new(window.AudioContext||window.webkitAudioContext)();
@@ -895,7 +919,12 @@ function renderChart(){
   htbl.innerHTML=[...hist].reverse().slice(0,8).map(s=>{
     const sets=s.sets[exId],mx=Math.max(...sets.map(st=>st.weight||0)),best=sets.find(st=>st.weight===mx);
     const prev=exSess(exId).filter(ss=>ss.date<s.date),pB=prev.length?Math.max(...prev.flatMap(ss=>ss.sets[exId]||[]).map(st=>st.weight||0)):0;
-    return `<div class="h-row"><span class="h-date">${fmtDate(s.date).slice(0,6)}</span><span class="h-detail">${sets.length} serie · max <b>${mx}kg</b>×${best?.reps||'?'}rep</span>${mx>pB&&pB>0?'<span class="h-pr">🏆 PR</span>':''}</div>`;
+    const prBadge=mx>pB&&pB>0?'<span class="h-pr">🏆 PR</span>':'';
+    const setsHtml=sets.map((st,i)=>{
+      const top=st.weight===mx&&mx>0;
+      return `<div class="h-acc-row${top?' top-set':''}"><span class="h-acc-n">${i+1}</span><span>${st.reps||'?'} rep</span><span>${st.weight>0?st.weight+' kg':'—'}</span></div>`;
+    }).join('');
+    return `<div class="h-item"><div class="h-row" onclick="this.closest('.h-item').classList.toggle('open')"><span class="h-date">${fmtDate(s.date).slice(0,6)}</span><span class="h-detail">${sets.length} serie · max <b>${mx}kg</b>×${best?.reps||'?'}rep</span>${prBadge}<span class="h-chev">▾</span></div><div class="h-acc">${setsHtml}</div></div>`;
   }).join('');
   tw(htbl);
 }
@@ -1046,6 +1075,27 @@ if('serviceWorker'in navigator)navigator.serviceWorker.register('./gym-sw.js').c
 loadTheme();
 loadData();
 renderWorkout();
+// Timer swipe-down to close
+(function(){
+  const sheet=document.querySelector('.timer-sheet');
+  let sy=0;
+  sheet.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
+  sheet.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>60)closeTimer();},{passive:true});
+})();
+// Resync timer when returning to the app
+document.addEventListener('visibilitychange',()=>{
+  if(!document.hidden&&tOn&&tEndTime){
+    tLeft=Math.max(0,Math.ceil((tEndTime-Date.now())/1000));
+    updateTimerUI();
+    if(tLeft<=0){
+      if(tIv){clearInterval(tIv);tIv=null;}
+      tOn=false;tEndTime=null;
+      document.getElementById('t-ss').textContent='▶ Riparti';
+      document.getElementById('t-time').classList.add('done');
+      beep();notifyDone();
+    }
+  }
+});
 </script>
 </body>
 </html>
