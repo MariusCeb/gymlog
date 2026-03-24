@@ -834,16 +834,23 @@ function startTimer(){
   document.getElementById('t-ss').textContent='\u23F8\uFE0E Pausa';
   if(tIv){clearInterval(tIv);tIv=null;}
   tIv=setInterval(()=>{
-    tLeft=Math.max(0,Math.ceil((tEndTime-Date.now())/1000));
+    tLeft=Math.max(0,Math.round((tEndTime-Date.now())/1000));
     updateTimerUI();
     if(tLeft<=0){clearInterval(tIv);tIv=null;tOn=false;tEndTime=null;
       document.getElementById('t-ss').textContent='▶ Riparti';
       document.getElementById('t-time').classList.add('done');
       beep();notifyDone();}
-  },500);
+  },1000);
 }
 function pauseTimer(){tOn=false;tEndTime=null;if(tIv){clearInterval(tIv);tIv=null;}document.getElementById('t-ss').textContent='▶ Start';}
-function resetTimer(){pauseTimer();tLeft=tDur;tEndTime=null;document.getElementById('t-time').classList.remove('done');updateTimerUI();}
+function resetTimer(){
+  pauseTimer();tLeft=tDur;tEndTime=null;
+  document.getElementById('t-time').classList.remove('done');
+  const prog=document.getElementById('t-prog');
+  prog.style.transition='none';
+  updateTimerUI();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>{prog.style.transition='';}));
+}
 function adjTimer(d){
   tDur=Math.max(15,tDur+d);tLeft=tDur;pauseTimer();
   document.getElementById('t-time').classList.remove('done');
@@ -1077,10 +1084,24 @@ loadData();
 renderWorkout();
 // Timer swipe-down to close
 (function(){
-  const sheet=document.querySelector('.timer-sheet');
-  let sy=0;
-  sheet.addEventListener('touchstart',e=>{sy=e.touches[0].clientY;},{passive:true});
-  sheet.addEventListener('touchend',e=>{if(e.changedTouches[0].clientY-sy>60)closeTimer();},{passive:true});
+  const overlay=document.getElementById('timer-overlay');
+  let sy=0,active=false;
+  overlay.addEventListener('touchstart',e=>{
+    if(!overlay.classList.contains('open'))return;
+    sy=e.touches[0].clientY;active=true;
+    overlay.style.transition='none';
+  },{passive:true});
+  overlay.addEventListener('touchmove',e=>{
+    if(!active)return;
+    const dy=e.touches[0].clientY-sy;
+    if(dy>10){e.preventDefault();overlay.style.transform=`translateY(${dy}px)`;}
+  },{passive:false});
+  overlay.addEventListener('touchend',e=>{
+    if(!active)return;active=false;
+    const dy=e.changedTouches[0].clientY-sy;
+    overlay.style.transition='';overlay.style.transform='';
+    if(dy>80)closeTimer();
+  },{passive:true});
 })();
 // Resync timer when returning to the app
 document.addEventListener('visibilitychange',()=>{
