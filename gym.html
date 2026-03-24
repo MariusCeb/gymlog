@@ -303,6 +303,29 @@ body{
   letter-spacing:.08em;width:calc(100% - 32px);
 }
 
+/* ── BACKUP ───────────────────────────────────────────── */
+.backup-box{
+  margin:0 16px 16px;border:1px solid var(--bd);border-radius:var(--r);
+  overflow:hidden;
+}
+.backup-title{
+  font-size:8px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--muted);padding:9px 13px 7px;border-bottom:1px solid var(--bd);
+}
+.backup-row{display:flex;gap:0}
+.backup-btn{
+  flex:1;padding:11px 8px;background:transparent;border:none;border-right:1px solid var(--bd);
+  color:var(--text);font-family:var(--mono);font-size:10px;cursor:pointer;
+  -webkit-appearance:none;letter-spacing:.06em;display:flex;align-items:center;
+  justify-content:center;gap:6px;transition:background .15s;
+}
+.backup-btn:last-child{border-right:none}
+.backup-btn:active{background:var(--s2)}
+.backup-btn svg{flex-shrink:0;color:var(--muted)}
+.backup-note{
+  font-size:8px;color:var(--muted);padding:6px 13px 8px;line-height:1.5;letter-spacing:.03em;
+}
+
 /* ── MODAL ────────────────────────────────────────────── */
 .modal-bg{
   position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:200;
@@ -427,6 +450,21 @@ img.emoji{height:1.1em;width:1.1em;vertical-align:-.1em;display:inline-block}
   </div>
   <div id="days-container"></div>
   <button class="add-day-btn" onclick="openModal('addDay')">＋ Nuova scheda</button>
+  <div class="backup-box">
+    <div class="backup-title">Backup dati</div>
+    <div class="backup-row">
+      <button class="backup-btn" onclick="exportData()">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"/></svg>
+        Esporta JSON
+      </button>
+      <label class="backup-btn">
+        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3"/></svg>
+        Importa JSON
+        <input type="file" accept=".json" style="display:none" onchange="importData(this)">
+      </label>
+    </div>
+    <div class="backup-note" id="backup-note">Salva su iCloud Drive per non perdere mai i progressi.</div>
+  </div>
 </div>
 
 <!-- ══ TIMER ══════════════════════════════════════════════ -->
@@ -948,6 +986,45 @@ function openModal(type,id){
 }
 function closeModal(){document.getElementById('modal-bg').classList.remove('open');}
 function handleBgClick(e){if(e.target===document.getElementById('modal-bg'))closeModal();}
+
+// ═══════════════════════════════════════════════════════
+//  BACKUP — EXPORT / IMPORT
+// ═══════════════════════════════════════════════════════
+function exportData(){
+  const json=JSON.stringify(data,null,2);
+  const blob=new Blob([json],{type:'application/json'});
+  const name=`gymlog-backup-${today()}.json`;
+  // iOS: usa share sheet → "Salva su File" → iCloud Drive
+  if(navigator.canShare){
+    const file=new File([blob],name,{type:'application/json'});
+    if(navigator.canShare({files:[file]})){
+      navigator.share({files:[file],title:'GymLog Backup'}).catch(()=>{});
+      return;
+    }
+  }
+  // Fallback desktop: download diretto
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+  URL.revokeObjectURL(url);
+}
+function importData(input){
+  const file=input.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const imp=JSON.parse(e.target.result);
+      if(!imp.days||!imp.exercises||!imp.sessions)throw new Error();
+      data=imp;save();
+      const n=imp.sessions.length;
+      toast(`Importato: ${n} session${n===1?'e':'i'} ✓`);
+      renderExView();renderPills();if(dayId)renderExercises();
+      const note=document.getElementById('backup-note');
+      if(note)note.textContent=`Ultimo import: ${today()} · ${n} sessioni`;
+    }catch(err){toast('File non valido o corrotto');}
+    input.value='';
+  };
+  reader.readAsText(file);
+}
 
 // ═══════════════════════════════════════════════════════
 //  TOAST
