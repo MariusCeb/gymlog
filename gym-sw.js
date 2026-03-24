@@ -1,4 +1,4 @@
-const CACHE = 'gymlog-v5';
+const CACHE = 'gymlog-v7';
 const ASSETS = [
   './gym.html',
   './gym-manifest.json',

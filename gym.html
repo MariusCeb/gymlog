@@ -199,6 +199,7 @@ body{
 .timer-overlay{
   position:fixed;bottom:0;left:0;right:0;z-index:100;
   transform:translateY(100%);transition:transform .35s cubic-bezier(.32,.72,0,1);
+  touch-action:none;
 }
 .timer-overlay.open{transform:translateY(0)}
 .timer-sheet{
@@ -234,6 +235,45 @@ body{
 }
 .t-btn.primary{background:var(--red);border-color:var(--red);color:#fff}
 .t-btn:active{opacity:.75}
+
+/* ── TIMER MINI BAR ───────────────────────────────────── */
+.timer-minibar{
+  flex-shrink:0;display:flex;align-items:center;
+  background:var(--s1);
+  padding:0 14px;height:50px;gap:10px;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
+  /* hidden: collapse height + invisible */
+  max-height:0;overflow:hidden;opacity:0;pointer-events:none;
+  transition:max-height .35s cubic-bezier(.32,.72,0,1),opacity .25s;
+}
+.timer-minibar.visible{
+  max-height:60px;opacity:1;pointer-events:auto;
+  box-shadow:inset 0 1px 0 var(--bd2);
+}
+.tm-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--muted);flex-shrink:0;transition:background .3s;
+}
+.timer-minibar.running .tm-dot{background:var(--red);animation:pulse 1.4s ease infinite}
+.tm-time{
+  font-family:var(--mono);font-size:22px;font-weight:300;
+  letter-spacing:-.03em;flex-shrink:0;min-width:46px;
+  transition:color .3s;
+}
+.timer-minibar.running .tm-time{color:var(--red)}
+.tm-name{
+  flex:1;font-size:9px;color:var(--muted);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  letter-spacing:.08em;text-transform:uppercase;
+}
+.tm-btn{
+  flex-shrink:0;height:30px;padding:0 11px;
+  background:var(--s2);border:1px solid var(--bd);border-radius:var(--r);
+  color:var(--text);font-family:var(--mono);font-size:9px;font-weight:500;
+  cursor:pointer;-webkit-appearance:none;letter-spacing:.08em;text-transform:uppercase;
+  transition:opacity .15s;
+}
+.tm-btn:active{opacity:.7}
 
 /* ── PROGRESS ─────────────────────────────────────────── */
 .stats-row{display:flex;gap:8px;margin:0 16px 12px}
@@ -514,6 +554,15 @@ img.emoji{height:1.1em;width:1.1em;vertical-align:-.1em;display:inline-block}
 
 <div class="toast" id="toast"></div>
 
+<!-- ══ TIMER MINI BAR ════════════════════════════════════ -->
+<div class="timer-minibar" id="timer-minibar" onclick="expandTimer()">
+  <div class="tm-dot"></div>
+  <span class="tm-time" id="tm-time">0:00</span>
+  <span class="tm-name" id="tm-name">—</span>
+  <button class="tm-btn" id="tm-ss" onclick="event.stopPropagation();toggleTimer()">Pausa</button>
+  <button class="tm-btn" onclick="event.stopPropagation();closeTimer()">Chiudi</button>
+</div>
+
 <!-- ══ NAV ════════════════════════════════════════════════ -->
 <nav class="bottom-nav">
   <div class="nav-item active" onclick="showView('workout')">
@@ -618,7 +667,7 @@ function getPR(id){
 function exSess(id){return data.sessions.filter(s=>s.sets?.[id]?.some(st=>st.weight>0));}
 function tw(el){
   if(typeof twemoji!=='undefined')
-    twemoji.parse(el||document.body,{base:'https://cdn.jsdelivr.net/npm/twemoji@14.0.2/assets/',folder:'svg',ext:'.svg'});
+    twemoji.parse(el||document.body,{base:'https://abs.twimg.com/emoji/v2/',folder:'svg',ext:'.svg'});
 }
 const ICONS={
   bolt:   'M3.75 13.5l10.5-11.25L12 10.5h8.25L9.75 21.75 12 13.5H3.75z',
@@ -807,6 +856,7 @@ function finishWorkout(){
 // ═══════════════════════════════════════════════════════
 const CIRC=2*Math.PI*66;
 let tId=null,tDur=90,tLeft=90,tIv=null,tOn=false,tEndTime=null,tExName='';
+
 function openTimer(id){
   tId=id;const ex=data.exercises.find(e=>e.id===id);
   tDur=ex?.rest||90;tLeft=tDur;tOn=false;tEndTime=null;tExName=ex?.name||'';
@@ -815,34 +865,69 @@ function openTimer(id){
   document.getElementById('t-ss').textContent='▶ Start';
   document.getElementById('t-time').classList.remove('done');
   updateTimerUI();
+  // Hide mini bar, show full overlay
+  document.getElementById('timer-minibar').classList.remove('visible','running');
   document.getElementById('timer-overlay').classList.add('open');
   document.querySelectorAll('.timer-btn').forEach(b=>b.classList.remove('ticking'));
   document.getElementById('tb-'+id)?.classList.add('ticking');
   if('Notification'in window&&Notification.permission==='default')Notification.requestPermission();
   startTimer();
 }
+
 function closeTimer(){
   document.getElementById('timer-overlay').classList.remove('open');
+  document.getElementById('timer-minibar').classList.remove('visible','running');
   if(tIv){clearInterval(tIv);tIv=null;tOn=false;}
   tEndTime=null;
   document.querySelectorAll('.timer-btn').forEach(b=>b.classList.remove('ticking'));
 }
+
+function minimizeTimer(){
+  document.getElementById('timer-overlay').classList.remove('open');
+  const mb=document.getElementById('timer-minibar');
+  mb.classList.toggle('running',tOn);
+  mb.classList.add('visible');
+}
+
+function expandTimer(){
+  document.getElementById('timer-minibar').classList.remove('visible');
+  document.getElementById('timer-overlay').classList.add('open');
+}
+
 function toggleTimer(){tOn?pauseTimer():startTimer();}
+
 function startTimer(){
   if(tLeft<=0)tLeft=tDur;tOn=true;
   tEndTime=Date.now()+tLeft*1000;
-  document.getElementById('t-ss').textContent='\u23F8\uFE0E Pausa';
+  const pText='\u23F8\uFE0E Pausa';
+  document.getElementById('t-ss').textContent=pText;
+  document.getElementById('tm-ss').textContent=pText;
+  document.getElementById('timer-minibar').classList.add('running');
   if(tIv){clearInterval(tIv);tIv=null;}
   tIv=setInterval(()=>{
     tLeft=Math.max(0,Math.round((tEndTime-Date.now())/1000));
     updateTimerUI();
-    if(tLeft<=0){clearInterval(tIv);tIv=null;tOn=false;tEndTime=null;
-      document.getElementById('t-ss').textContent='▶ Riparti';
+    if(tLeft<=0){
+      clearInterval(tIv);tIv=null;tOn=false;tEndTime=null;
+      const rt='▶ Riparti';
+      document.getElementById('t-ss').textContent=rt;
+      document.getElementById('tm-ss').textContent=rt;
       document.getElementById('t-time').classList.add('done');
-      beep();notifyDone();}
+      document.getElementById('timer-minibar').classList.remove('running');
+      beep();notifyDone();
+    }
   },1000);
 }
-function pauseTimer(){tOn=false;tEndTime=null;if(tIv){clearInterval(tIv);tIv=null;}document.getElementById('t-ss').textContent='▶ Start';}
+
+function pauseTimer(){
+  tOn=false;tEndTime=null;
+  if(tIv){clearInterval(tIv);tIv=null;}
+  const st='▶ Start';
+  document.getElementById('t-ss').textContent=st;
+  document.getElementById('tm-ss').textContent=st;
+  document.getElementById('timer-minibar').classList.remove('running');
+}
+
 function resetTimer(){
   pauseTimer();tLeft=tDur;tEndTime=null;
   document.getElementById('t-time').classList.remove('done');
@@ -851,6 +936,7 @@ function resetTimer(){
   updateTimerUI();
   requestAnimationFrame(()=>requestAnimationFrame(()=>{prog.style.transition='';}));
 }
+
 function adjTimer(d){
   tDur=Math.max(15,tDur+d);tLeft=tDur;pauseTimer();
   document.getElementById('t-time').classList.remove('done');
@@ -858,11 +944,16 @@ function adjTimer(d){
     const tl=document.getElementById('tb-'+tId);if(tl)tl.querySelector('.tl').textContent=tDur+'s';}
   updateTimerUI();
 }
+
 function updateTimerUI(){
+  const t=fmtTime(tLeft);
   document.getElementById('t-dur-lbl').textContent=tDur+'s';
-  document.getElementById('t-time').textContent=fmtTime(tLeft);
+  document.getElementById('t-time').textContent=t;
   document.getElementById('t-prog').style.strokeDashoffset=CIRC*(1-tLeft/tDur);
+  document.getElementById('tm-time').textContent=t;
+  document.getElementById('tm-name').textContent=tExName||'Pausa';
 }
+
 function notifyDone(){
   if('Notification'in window&&Notification.permission==='granted'){
     try{new Notification('GymLog \u2756 Pausa finita!',{
@@ -871,6 +962,7 @@ function notifyDone(){
     });}catch(e){}
   }
 }
+
 function beep(){
   try{const ctx=new(window.AudioContext||window.webkitAudioContext)();
     [0,.18,.36].forEach(t=>{const o=ctx.createOscillator(),g=ctx.createGain();
@@ -1082,10 +1174,11 @@ if('serviceWorker'in navigator)navigator.serviceWorker.register('./gym-sw.js').c
 loadTheme();
 loadData();
 renderWorkout();
-// Timer swipe-down to close
+// Timer swipe-down to minimize
 (function(){
   const overlay=document.getElementById('timer-overlay');
   let sy=0,active=false;
+  const TRANS='transform .35s cubic-bezier(.32,.72,0,1)';
   overlay.addEventListener('touchstart',e=>{
     if(!overlay.classList.contains('open'))return;
     sy=e.touches[0].clientY;active=true;
@@ -1093,26 +1186,38 @@ renderWorkout();
   },{passive:true});
   overlay.addEventListener('touchmove',e=>{
     if(!active)return;
+    e.preventDefault();
     const dy=e.touches[0].clientY-sy;
-    if(dy>10){e.preventDefault();overlay.style.transform=`translateY(${dy}px)`;}
+    if(dy>0)overlay.style.transform=`translateY(${dy}px)`;
   },{passive:false});
   overlay.addEventListener('touchend',e=>{
     if(!active)return;active=false;
     const dy=e.changedTouches[0].clientY-sy;
-    overlay.style.transition='';overlay.style.transform='';
-    if(dy>80)closeTimer();
+    overlay.style.transition=TRANS;
+    if(dy>80){
+      // Animate out, then switch to mini bar
+      overlay.style.transform='translateY(110%)';
+      setTimeout(()=>{overlay.style.transition='';overlay.style.transform='';minimizeTimer();},360);
+    } else {
+      // Snap back
+      overlay.style.transform='translateY(0)';
+      setTimeout(()=>{overlay.style.transition='';overlay.style.transform='';},360);
+    }
   },{passive:true});
 })();
 // Resync timer when returning to the app
 document.addEventListener('visibilitychange',()=>{
   if(!document.hidden&&tOn&&tEndTime){
-    tLeft=Math.max(0,Math.ceil((tEndTime-Date.now())/1000));
+    tLeft=Math.max(0,Math.round((tEndTime-Date.now())/1000));
     updateTimerUI();
     if(tLeft<=0){
       if(tIv){clearInterval(tIv);tIv=null;}
       tOn=false;tEndTime=null;
-      document.getElementById('t-ss').textContent='▶ Riparti';
+      const rt='▶ Riparti';
+      document.getElementById('t-ss').textContent=rt;
+      document.getElementById('tm-ss').textContent=rt;
       document.getElementById('t-time').classList.add('done');
+      document.getElementById('timer-minibar').classList.remove('running');
       beep();notifyDone();
     }
   }
